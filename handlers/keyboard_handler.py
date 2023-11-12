@@ -4,6 +4,7 @@ from telegram import (
     KeyboardButton,
     ReplyKeyboardMarkup, ForceReply,
 )
+
 import os
 import logging
 from telegram.ext import CallbackContext
@@ -20,9 +21,10 @@ logger = logging.getLogger(__name__)
 def button(update: Update, context):
     query = update.callback_query
     val = query.data
-
+    reply_markup = ReplyKeyboardRemove()
+    
     # Store value
-    context.user_data["key_name"] = val
+    context.user_data["key_name"] = int(val)
 
     # tell the user it worked
     query.answer(f"🔥 Whoah, {val}km?! That's awesome! 🔥")

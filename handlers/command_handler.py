@@ -2,19 +2,19 @@ import logging
 from telegram.ext import CallbackContext
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardButton, \
     InlineKeyboardMarkup
+
 from bot import db_handler
+
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
-
-# Create a variable to store the user's selected distance
-selected_distance = None
 
 
 def start(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     user_name = update.message.chat.first_name
     logger.info(f"> Start chat #{chat_id}, with: {user_name!r}")
+
 
     # Message #1: A lively welcome
     context.bot.send_message(
@@ -34,6 +34,7 @@ def start(update: Update, context: CallbackContext):
 
     context.bot.send_message(
         chat_id=chat_id,
+
         text="I'm your adventure companion, and together, we'll uncover hidden gems and thrilling locations 🗺️\n\n"
              "How far are you willing to travel for your next adventure?",
         reply_markup=InlineKeyboardMarkup(distance_keyboard)
