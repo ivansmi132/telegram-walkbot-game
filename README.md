@@ -1,8 +1,8 @@
 # walkSpotBot
 
 ## The Team
-- Allan
 - Dean
+- Allan
 - Ivan
 - Sobhi
 
