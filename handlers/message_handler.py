@@ -1,6 +1,6 @@
 import logging
 from telegram.ext import CallbackContext
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from api.google_maps import (
     Distance,
     get_location,
@@ -28,6 +28,7 @@ def voice_response(update: Update, context: CallbackContext):
 
 def live_location_receiver(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
+
     msg_type = 0
 
     if update.edited_message:
@@ -47,8 +48,9 @@ def live_location_receiver(update: Update, context: CallbackContext):
         )
     elif msg_type == 1:
         # the user has stopped sharing his live location
-        logger.info(f"= End of live location period on chat #{chat_id}")
-        context.bot.send_message(chat_id, "You stopped sharing your location.")
+        logger.info(f"= Live location paused. Chat ID: #{chat_id}")
+        context.bot.send_message(chat_id, "Live location paused")
+
     elif msg_type == 2:
         # At this point the user started sharing his live location
 
@@ -101,8 +103,9 @@ def live_location_receiver(update: Update, context: CallbackContext):
         context.user_data["current_location"] = {'latitude': message["location"]["latitude"],
                                                  'longitude': message["location"]["longitude"]}
         logger.info(
-            f"= Live update: Got location {message['location']} on chat #{chat_id}"
+            f"= Live location received: {message['location']}. Chat ID: #{chat_id}"
         )
+        
         current_distance = int((haversine(context.user_data['destination_location']['lat'],
                                           context.user_data['destination_location']['lng'],
                                           context.user_data['current_location']['latitude'],
@@ -112,3 +115,4 @@ def live_location_receiver(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id,
                                  f"Your current distance from\n{context.user_data['destination']['result']['name']}\n"
                                  f"is {current_distance} meteres")
+

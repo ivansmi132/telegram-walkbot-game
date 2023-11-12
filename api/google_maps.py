@@ -3,7 +3,6 @@ from math import radians, cos, sin, asin, sqrt
 import googlemaps
 from googlemaps import convert
 from googlemaps.places import find_place
-import os
 import logging
 import geopy.distance
 import random
