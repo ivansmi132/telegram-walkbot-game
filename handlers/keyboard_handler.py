@@ -3,6 +3,7 @@ from telegram import (
     InlineKeyboardMarkup,
     KeyboardButton,
     ReplyKeyboardMarkup,
+    ReplyKeyboardRemove
 )
 import logging
 from telegram.ext import CallbackContext
@@ -30,13 +31,17 @@ def button_click(update: Update, context: CallbackContext):
 
 
 def button(update, context):
+    chat_id = update.effective_chat.id
     query = update.callback_query
     val = query.data
+    reply_markup = ReplyKeyboardRemove()
 
     # Store value
-    context.user_data["key_name"] = val
+    context.user_data["key_name"] = int(val)
     # tell the user it worked
     query.answer("Updated Successfully!")
+    context.bot.send_message(chat_id=chat_id, text="Please start sharing your live location to start playing",
+                             reply_markup=reply_markup)
 
 
 def location_keyboard_button(update: Update, context: CallbackContext):
