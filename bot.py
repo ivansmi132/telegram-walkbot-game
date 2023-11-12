@@ -1,5 +1,5 @@
-# poetry added imports
-from bot_settings import BOT_TOKEN
+from telegram import Update
+from bot_settings import BOT_TOKEN, MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -16,6 +16,7 @@ import logging
 import handlers.keyboard_handler as kb
 import handlers.command_handler as ch
 import handlers.message_handler as mh
+import handlers.database_handler as db
 
 # Configure the logger
 logging.basicConfig(
@@ -26,16 +27,19 @@ logging.basicConfig(
 # Create a logger instance
 logger = logging.getLogger(__name__)
 
+# Create mongo handler instance
+db_handler = db.MongoDBHandler(MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME)
+
 
 def main():
     # Get bot API key
     bot_key = BOT_TOKEN
 
     # Persistence file ( This is how the user data can be saved even after turning off our bot )
-    my_persistence = PicklePersistence(filename="saved_memory")
+    #my_persistence = PicklePersistence(filename="saved_memory")
 
     # Updater
-    my_bot = Updater(token=bot_key, persistence=my_persistence, use_context=True)
+    my_bot = Updater(token=bot_key, use_context=True)
 
     # Dispatcher
     dp = my_bot.dispatcher
@@ -43,6 +47,8 @@ def main():
     # Commands handler
     # dp.add_handler(CommandHandler('command', callback))
     dp.add_handler(CommandHandler("start", ch.start))
+    dp.add_handler(CommandHandler("score", ch.score))
+    dp.add_handler(CommandHandler("leaderboard", ch.leaderboard))
     dp.add_handler(CommandHandler("location", kb.button))
 
     # Messages handler

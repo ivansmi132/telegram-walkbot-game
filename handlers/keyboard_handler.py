@@ -4,11 +4,13 @@ from telegram import (
     KeyboardButton,
     ReplyKeyboardMarkup, ForceReply,
 )
+import os
 import logging
 from telegram.ext import CallbackContext
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 
-live_gif = '/Users/dean_main/Developer/WebDev/Advanced Python/Hackathon/walkSpotBot/telegram-bot-hackathon-walkspotbot/live.gif'
+project_root = os.getcwd()
+live_gif = os.path.join(project_root, "live.gif")
 
 
 # Import the logger from the main module
