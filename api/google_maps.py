@@ -3,7 +3,6 @@ import math
 import googlemaps
 from googlemaps import convert
 from googlemaps.places import find_place
-import os
 import logging
 import geopy.distance
 import random

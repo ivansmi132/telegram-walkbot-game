@@ -1,24 +1,19 @@
 # poetry added imports
-from telegram import Update
 from bot_settings import BOT_TOKEN
 from telegram.ext import (
     Updater,
     CommandHandler,
     MessageHandler,
     Filters,
-    CallbackContext,
     PicklePersistence,
     CallbackQueryHandler,
 )
 
 # Default libraries
 import logging
-import os
 
 # Our modules import
-import api.google_maps as gm
 import handlers.keyboard_handler as kb
-import handlers.database_handler as db
 import handlers.command_handler as ch
 import handlers.message_handler as mh
 
@@ -48,7 +43,7 @@ def main():
     # Commands handler
     # dp.add_handler(CommandHandler('command', callback))
     dp.add_handler(CommandHandler("start", ch.start))
-    dp.add_handler(CommandHandler("location", kb.location_keyboard_button))
+    dp.add_handler(CommandHandler("location", kb.button))
 
     # Messages handler
     # dp.add_handler(MessageHandler(Filters.TYPE, callback))
