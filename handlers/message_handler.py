@@ -1,6 +1,6 @@
 import logging
 from telegram.ext import CallbackContext
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from api.google_maps import (
     generate_random_geo_point_in_dist,
     get_distance_in_km_from_geo,
@@ -37,6 +37,7 @@ def location_receiver(update: Update, context: CallbackContext):
 
 def live_location_receiver(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
+
     msg_type = 0
 
     if update.edited_message:
@@ -58,13 +59,12 @@ def live_location_receiver(update: Update, context: CallbackContext):
             chat_id, "Single (non-live) location update.", reply_markup=reply_markup
         )
     elif msg_type == 1:
-        logger.info(f"= End of live location period on chat #{chat_id}")
-        context.bot.send_message(chat_id, "End of live period.")
+        logger.info(f"= Live location paused. Chat ID: #{chat_id}")
+        context.bot.send_message(chat_id, "Live location paused")
     elif msg_type == 2:
         logger.info(
             f"= Start of live period: Got location {message['location']} on chat #{chat_id}"
         )
-        context.bot.send_message(chat_id, "Start of live period")
     elif msg_type == 3:
         loc = message["location"]
         long = loc["longitude"]
@@ -75,10 +75,9 @@ def live_location_receiver(update: Update, context: CallbackContext):
         destination = (new_lat, new_long)
         actual_distance = get_distance_in_km_from_geo(origin, destination)
         logger.info(
-            f"= Live update: Got location {message['location']} on chat #{chat_id}"
+            f"= Live location received: {message['location']}. Chat ID: #{chat_id}"
         )
         logger.info(
-            f"= random point generated from origin: {origin} at: {destination}, requested_distance: {distance},"
+            f"= Random point: {origin} at: {destination}, requested_distance: {distance},"
             f" actual_distance: {actual_distance}"
         )
-        context.bot.send_message(chat_id, "Live location update.")

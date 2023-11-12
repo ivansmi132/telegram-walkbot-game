@@ -1,4 +1,12 @@
 # walkSpotBot
+
+## The Team
+- Dean
+- Allan
+- Ivan
+- Sobhi
+
+## About this bot
 This is a telegram game bot where the players tell the bot how far they want to walk, and the bot will find a random interest spot for the player to find! The bot will give the player hot and cold hints, which the player may want to use in order to get to the location.
 
 ## api
