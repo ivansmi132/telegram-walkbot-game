@@ -1,40 +1,21 @@
-# 🚧 YOUR BOT NAME HERE
+# walkSpotBot
+This is a telegram game bot where the players tell the bot how far they want to walk, and the bot will find a random interest spot for the player to find! The bot will give the player hot and cold hints, which the player may want to use in order to get to the location.
 
-## The Team
-- 🚧 Participant 1 Name
-- 🚧 Participant 2 Name
-- 🚧 Participant 3 Name
+## api
+the api folder contains all the APIs that we use besides our main telegram one
 
-## About this bot
+    # google_maps uses the googlemaps api to fetch location data based on latitude and longitude
 
-🚧 ENTER DESCRIPTION HERE
+## handlers
+the handlers are our personal modules, each handler is in charge of something else
 
-🚧 YOU CAN ADD A t.me LINK TO THE BOT HERE
+    # command_handler is in charge of all the commands such as "/start"
 
-🚧 ADD SCREENSHOTS/GIFS/SCREENCAST HERE (REFER TO MARKDOWN'S SYNTAX FOR HELP ON DISPLAYING IMAGES)
+    # database_handler is in charge of how we store and fetch user_data, bot_data and chat_data.
 
-🚧 ADD ANY OTHER NOTES REGARDING THE BOT
- 
-## Instructions for Developers 
-### Prerequisites
-- Python 3.10
-- Poetry
-- 🚧 ADD ANY OTHER PREREQUISITE HERE (MONGODB?)
+    # keyboard handler is in charge of handing keyboard related actions and callbacks.
 
-### Setup
-- git clone this repository 
-- cd into the project directory
-- Install dependencies:
-    
-      poetry install
+    # message_handler is in charge of any user input that isn't a commant, it can be anything from text to location or video
 
-
-- Get an API Token for a bot via the [BotFather](https://telegram.me/BotFather)
-- Create a `bot_settings.py` file with your bot token:
-
-      BOT_TOKEN = 'xxxxxxx'
-
-### Running the bot        
-- Run the bot:
-
-      poetry run python bot.py
+[Data Reference](https://github.com/python-telegram-bot/v13.x-wiki/wiki/Storing-bot%2C-user-and-chat-related-data) \
+[Inline Keyboard Reference](https://github.com/python-telegram-bot/v13.x-wiki/wiki/InlineKeyboard-Example)
