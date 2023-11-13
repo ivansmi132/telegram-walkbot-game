@@ -45,15 +45,15 @@ def main():
     # dp.add_handler(CommandHandler('command', callback))
     dp.add_handler(CommandHandler("start", ch.start))
     #dp.add_handler(CommandHandler("cancel", ch.cancel))
-    dp.add_handler(CommandHandler("finish", ch.finish))
+    #dp.add_handler(CommandHandler("finish", ch.finish))
     dp.add_handler(CommandHandler("location", kb.button))
     dp.add_handler(CommandHandler("score", ch.score))
     dp.add_handler(CommandHandler("leaderboard", ch.leaderboard))
 
     # Messages handler
     # dp.add_handler(MessageHandler(Filters.TYPE, callback))
+    # dp.add_handler(MessageHandler(Filters.voice, mh.voice_response))
     dp.add_handler(MessageHandler(Filters.text, mh.text_response))
-    dp.add_handler(MessageHandler(Filters.voice, mh.voice_response))
     dp.add_handler(MessageHandler(Filters.location, mh.live_location_receiver))
 
     # Buttons

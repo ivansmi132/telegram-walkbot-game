@@ -44,8 +44,8 @@ def button(update: Update, context):
     context.bot.sendAnimation(
         chat_id=chat_id,
         animation=open(gif_path, 'rb'),
-        caption="Now, it's time to activate Live Location!"
+        caption=f"{'^' * 30}\nNow, please activate your Live Location!"
     )
 
     # Once we have live location
-    logger.info(f"> Requesting user to share live location. Chat ID: #{chat_id}")
+    logger.info(f"> Requesting user to activate Live Location. Chat ID: #{chat_id}")

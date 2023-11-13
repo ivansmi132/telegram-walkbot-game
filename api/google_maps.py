@@ -43,7 +43,7 @@ def get_place_details(client, place_id, fields=None, language=None):
 
 def get_location(lat=None, long=None, filter=None):
     # defined here only for now.
-    filter = "Sushi"
+    filter = 'Burger'
 
     # Funny enough, defining the location_bias like this, actually made it track my computer's location
     # It seems like google fetches your location if lat and long are NONE, but need further testing

@@ -26,7 +26,7 @@ def start(update: Update, context: CallbackContext):
     # Message #1: A lively welcome
     context.bot.send_message(
         chat_id=chat_id,
-        text="Welcome aboard, fearless explorer! Get ready to embark on an epic journey! 🚀",
+        text="Welcome aboard, fearless explorer!\nGet ready to embark on an epic journey! 🚀",
         reply_markup=ReplyKeyboardRemove()
     )
 
@@ -42,8 +42,8 @@ def start(update: Update, context: CallbackContext):
     context.bot.send_message(
         chat_id=chat_id,
 
-        text="I'm your adventure companion, and together, we'll uncover hidden gems and thrilling locations 🗺️\n\n"
-             "How far are you willing to travel for your next adventure?",
+        text="I'm your adventure companion \ntogether, we'll uncover hidden gems and thrilling locations 🗺️\n\n"
+             "But how far are you willing to travel for your next adventure?",
         reply_markup=InlineKeyboardMarkup(distance_keyboard)
     )
 
