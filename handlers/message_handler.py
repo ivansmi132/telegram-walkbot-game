@@ -1,6 +1,7 @@
 import logging
 from telegram.ext import CallbackContext
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, \
+    InlineKeyboardMarkup
 from api.google_maps import (
     Distance,
     get_location,
@@ -12,7 +13,6 @@ import handlers.keyboard_handler as kb
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
-
 
 
 def text_response(update: Update, context: CallbackContext):
@@ -66,7 +66,7 @@ def live_location_receiver(update: Update, context: CallbackContext):
 
         # Context.user_data['distance'].destination is the randomly generated location at the distance the user
         # Specified. It's a dictionary of which the 'result' key holds the information of the random place
-        context.user_data['destination'] = get_location(*context.user_data['distance'].destination)
+        context.user_data['destination'] = get_location(*context.user_data['distance'].get_destination())
 
         # Keeping the location of our destination in user_data
         context.user_data['destination_location'] = context.user_data['destination']['result']['geometry']['location']
@@ -91,13 +91,13 @@ def live_location_receiver(update: Update, context: CallbackContext):
             logger.info(f"On chat #{chat_id} Sent a photo of {location_name}")
 
             # We should skip to the next result if no photo is available
-        except IndexError:
+        except (IndexError, KeyError):
             logger.info(f"For chat #{chat_id} there are no photos of {location_name}")
             return
         context.bot.send_message(chat_id,
                                  f"Looks familiar? 🧐\n\nYour mission: Observe the photo above and try to "
                                  f"get there without using a map 🚫🗺")
-    elif msg_type == 3 and user_state == sh.StateStages.PLAYING_LOOP:
+    elif msg_type == 3: #and user_state == sh.StateStages.PLAYING_LOOP
         # We get an updated location from the user sharing his live location
         playing_loop(update, context, message)
 
@@ -113,6 +113,11 @@ def live_location_timeout(update, context, chat_id, user_state):
 
 def playing_loop(update, context, message):
     chat_id = update.effective_chat.id
+    old_location = 0
+    try:
+        old_location = context.user_data["current_location"]
+    except KeyError:
+        old_location = 0
     context.user_data["current_location"] = {'latitude': message["location"]["latitude"],
                                              'longitude': message["location"]["longitude"]}
     logger.info(
@@ -123,6 +128,18 @@ def playing_loop(update, context, message):
                                           context.user_data['destination_location']['lng'],
                                           context.user_data['current_location']['latitude'],
                                           context.user_data['current_location']['longitude'])) * 1000)
+        if old_location != 0:
+            old_distance = int((haversine(context.user_data['destination_location']['lat'],
+                                        context.user_data['destination_location']['lng'],
+                                        old_location['latitude'],
+                                        old_location['longitude'])) * 1000)
+        if old_location != 0 and current_distance < old_distance:
+            context.bot.send_message(chat_id, f"Hotter")
+        elif old_location != 0 and abs(current_distance - old_distance) < 10:
+            context.bot.send_message(chat_id, f"It seems like you haven't moved!")
+        elif old_location != 0:
+            context.bot.send_message(chat_id, f"Colder")
+
     except KeyError:
         started = False
         return

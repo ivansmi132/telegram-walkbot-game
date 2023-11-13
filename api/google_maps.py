@@ -43,7 +43,7 @@ def get_place_details(client, place_id, fields=None, language=None):
 
 def get_location(lat=None, long=None, filter=None):
     # defined here only for now.
-    filter = 'Burger'
+    # filter = "Sushi"
 
     # Funny enough, defining the location_bias like this, actually made it track my computer's location
     # It seems like google fetches your location if lat and long are NONE, but need further testing
@@ -67,9 +67,7 @@ class Distance:
     def __init__(self, orig: tuple, dist=0):
         self.origin = orig
         self.distance = dist
-        new_lat, new_long = self.generate_random_geo_point_in_dist(self.origin, self.distance)
-        self.destination = (new_lat, new_long)
-        # self.actual_distance = self.get_distance_in_km_from_geo(self.origin, self.destination)
+        self.destination = self.generate_random_geo_point_in_dist(self.origin, self.distance)
 
     def get_origin(self) -> tuple:
         return self.origin
@@ -78,12 +76,16 @@ class Distance:
         return self.distance
 
     def get_destination(self) -> tuple:
-        return self.generate_random_geo_point_in_dist(self.origin, self.distance)
+        return self.destination
 
-    def get_distance_in_km_from_geo(self, coord1, coord2):
-        return geopy.distance.geodesic(coord1, coord2).km
+    def set_distance(self, val):
+        self.distance = val
+
+    # def get_distance_in_km_from_geo(self, coord1, coord2):
+    #     return geopy.distance.geodesic(coord1, coord2).km
 
     def generate_random_geo_point_in_dist(self, origin, distance):
+        origin, distance = self.origin, self.distance
         x = random.random() * distance * random.choice([1, -1])
         y = math.sqrt(distance ** 2 - x ** 2) * random.choice([1, -1])
         R = 6378  # Earth's radius in kilometers
