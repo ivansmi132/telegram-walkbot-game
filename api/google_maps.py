@@ -6,7 +6,13 @@ from math import radians, cos, sin, asin, sqrt
 import googlemaps
 from bot_settings import GOOGLE_API_KEY
 from googlemaps import convert
-from googlemaps.places import find_place
+from googlemaps.places import find_place, places_nearby
+import logging
+import geopy.distance
+import random
+from bot_settings import GOOGLE_API_KEY
+from pprint import pprint
+
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
@@ -40,7 +46,18 @@ def get_place_details(client, place_id, fields=None, language=None):
     return client._request("/maps/api/place/details/json", params)
 
 
-def get_location(lat=None, long=None, filter=None):
+def counter_generator(start=1, step=1):
+    current_value = start
+    while True:
+        yield current_value
+        current_value += step
+
+
+my_counter = counter_generator()
+
+
+def get_location(lat=None, long=None, filter=None, data=None):
+    global my_counter
     # defined here only for now.
     filter = "Burgers"
 
@@ -52,9 +69,10 @@ def get_location(lat=None, long=None, filter=None):
     logger.info(f"Getting location: {location_bias} | with fiter: {filter}")
 
     g_client = googlemaps.Client(key=GOOGLE_API_KEY)
-    response = find_place(g_client, filter, "textquery", location_bias=location_bias)
-    place = get_place_details(g_client, response["candidates"][0]["place_id"])
-    # pprint(place)
+    #response = find_place(g_client, filter, "textquery", location_bias=location_bias)
+    response = places_nearby(g_client, (lat, long), radius=150)
+    pprint(response['results'])
+    place = get_place_details(g_client, response['results'][next(my_counter)]['place_id'])  # [counter][place_id]
     return place
 
 
