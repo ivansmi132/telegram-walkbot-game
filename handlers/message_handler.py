@@ -74,8 +74,8 @@ def live_location_receiver(update: Update, context: CallbackContext):
     elif msg_type == 2:
         # got live location for the first time
         first_decide_on_place(update, context, chat_id, lat, long)
-        ###context.user_data['msg'] = context.bot.send_message(chat_id=chat_id, text="Start moving !!!")
-        ###context.user_data['not_moving_msg'] = None
+        context.user_data['msg'] = context.bot.send_message(chat_id=chat_id, text="Start moving !!!")
+        context.user_data['not_moving_msg'] = None
     elif msg_type == 3 and user_state == sh.StateStages.PLAYING_LOOP:
         # We get an updated location from the user sharing his live location
         playing_loop(update, context, message)
@@ -116,10 +116,16 @@ def playing_loop(update, context, message):
                                           old_location['longitude'])) * 1000)
 
         if old_location != 0 and abs(current_distance - old_distance) < 2:
-            context.bot.send_message(chat_id, f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
+            if context.user_data['not_moving_msg'] is None:
+                context.bot.send_message(chat_id = chat_id,
+                                         text = f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
         elif old_location != 0 and current_distance < old_distance:
-            context.bot.send_message(chat_id, f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
-                                              f"meters from your destination!")
+            if context.user_data['not_moving_msg']:
+                context.bot.delete_message(chat_id=chat_id,
+                                           message_id=context.user_data['not_moving_msg'].message_id)
+                context.user_data['not_moving_msg'] = None
+                context.bot.send_message(chat_id, f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
+                                                f"meters from your destination!")
             
         elif old_location != 0 and current_distance <= 20:
             play_again_keyboard = [[
@@ -206,8 +212,8 @@ def first_decide_on_place(update, context, chat_id, lat, long):
                              f"Looks familiar? 🧐\n\nYour mission: Observe the photo above and try to "
                              f"get there without using a map 🚫🗺")
     choice_keyboard = [[
-        InlineKeyboardButton("accept", callback_data="accept"),
-        InlineKeyboardButton("choose another", callback_data=f"another,{lat},{long}"),
+        InlineKeyboardButton("accept", callback_data="place_accept"),
+        InlineKeyboardButton("choose another", callback_data=f"place_another,{lat},{long}"),
     ]]
 
     context.bot.send_message(

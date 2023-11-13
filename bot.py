@@ -45,7 +45,6 @@ def main():
     # dp.add_handler(CommandHandler('command', callback))
     dp.add_handler(CommandHandler("start", ch.start))
     #dp.add_handler(CommandHandler("cancel", ch.cancel))
-    #dp.add_handler(CommandHandler("finish", ch.finish))
     dp.add_handler(CommandHandler("location", kb.button))
     dp.add_handler(CommandHandler("score", ch.score))
     dp.add_handler(CommandHandler("leaderboard", ch.leaderboard))
@@ -59,6 +58,7 @@ def main():
     # Buttons
     dp.add_handler(CallbackQueryHandler(kb.play_again_button, pattern="^play"))
     dp.add_handler(CallbackQueryHandler(kb.button, pattern="^n"))
+    dp.add_handler(CallbackQueryHandler(kb.places_choice_button, pattern="^place"))
 
     # Google Maps location (this is just here so you guys can see the data
     # pprint(gm.get_location())

@@ -26,15 +26,9 @@ def get_live_gif():
 
 def button(update: Update, context):
     sh.set_user_state(context.user_data, sh.StateStages.ASKING_LIVE_LOCATION)
+
     query = update.callback_query
     val = query.data
-    if val in "12345":
-        km_button(update, context, val, query)
-    else:
-        places_choice_button(update, context, val)
-
-
-def km_button(update: Update, context, val, query):
     reply_markup = ReplyKeyboardRemove()
 
     # Store value
@@ -66,9 +60,11 @@ def play_again_button(update: Update, context):
         start()
 
 
-
-def places_choice_button(update, context, val):
+def places_choice_button(update, context):
     chat_id = update.effective_chat.id
+    query = update.callback_query
+    val = query.data
+    val = val.split('_')[1]
     if val == "accept":
         context.bot.send_message(chat_id=chat_id,
                                  text="Challenge accepted! game is staring! 🤩🤩🤩",
