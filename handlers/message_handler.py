@@ -84,6 +84,8 @@ def live_location_receiver(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id,
                                  f"Looks familiar? 🧐\n\nYour mission: Observe the photo above and try to "
                                  f"get there without using a map 🚫🗺")
+        context.user_data['msg'] = context.bot.send_message(chat_id=chat_id, text="Start moving !!!")
+        context.user_data['not_moving_msg'] = None
     elif msg_type == 3:  # and user_state == sh.StateStages.PLAYING_LOOP
         # We get an updated location from the user sharing his live location
         playing_loop(update, context, message)
@@ -121,12 +123,23 @@ def playing_loop(update, context, message):
                                           old_location['latitude'],
                                           old_location['longitude'])) * 1000)
         if old_location != 0 and abs(current_distance - old_distance) < 2:
-            context.bot.send_message(chat_id, f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
+            if context.user_data['not_moving_msg'] is None:
+                context.user_data['not_moving_msg'] = context.bot.send_message(chat_id, f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
         elif old_location != 0 and current_distance < old_distance:
-            context.bot.send_message(chat_id, f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
-                                              f"meters from your destination!")
+            if context.user_data['not_moving_msg']:
+                context.bot.delete_message(chat_id=chat_id,
+                                           message_id=context.user_data['not_moving_msg'].message_id)
+                context.user_data['not_moving_msg'] = None
+            context.bot.edit_message_text(chat_id=chat_id, text=f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
+                                              f"meters from your destination!", message_id=context.user_data['msg'].message_id)
         elif old_location != 0:
-            context.bot.send_message(chat_id, f"🥶🥶🥶 Getting colder 🥶🥶🥶\n you are {current_distance}")
+            if context.user_data['not_moving_msg']:
+                context.bot.delete_message(chat_id=chat_id,
+                                           message_id=context.user_data['not_moving_msg'].message_id)
+                context.user_data['not_moving_msg'] = None
+            context.bot.edit_message_text(chat_id=chat_id, text=f"🥶🥶🥶 Getting colder 🥶🥶🥶\n you are {current_distance}"
+                                                                f"meters from your destination",
+                                          message_id=context.user_data['msg'].message_id)
 
     except KeyError:
         started = False
