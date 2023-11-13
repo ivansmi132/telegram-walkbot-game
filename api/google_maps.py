@@ -2,7 +2,7 @@ import math
 from math import radians, cos, sin, asin, sqrt
 import googlemaps
 from googlemaps import convert
-from googlemaps.places import find_place
+from googlemaps.places import find_place, places_nearby
 import logging
 import geopy.distance
 import random
@@ -41,10 +41,21 @@ def get_place_details(client, place_id, fields=None, language=None):
     return client._request("/maps/api/place/details/json", params)
 
 
-def get_location(lat=None, long=None, filter=None):
-    # defined here only for now.
-    # filter = "Sushi"
+def counter_generator(start=1, step=1):
+    current_value = start
+    while True:
+        yield current_value
+        current_value += step
 
+
+my_counter = counter_generator()
+
+
+def get_location(lat=None, long=None, filter=None, data=None):
+    global my_counter
+    # defined here only for now.
+    lat = 32.813875
+    long = 34.983117
     # Funny enough, defining the location_bias like this, actually made it track my computer's location
     # It seems like google fetches your location if lat and long are NONE, but need further testing
     location_bias = f"point:{lat},{long}"
@@ -53,9 +64,10 @@ def get_location(lat=None, long=None, filter=None):
     logger.info(f"Getting location: {location_bias} | with fiter: {filter}")
 
     g_client = googlemaps.Client(key=GOOGLE_API_KEY)
-    response = find_place(g_client, filter, "textquery", location_bias=location_bias)
-    place = get_place_details(g_client, response["candidates"][0]["place_id"])
-    # pprint(place)
+    #response = find_place(g_client, filter, "textquery", location_bias=location_bias)
+    response = places_nearby(g_client, (lat, long), radius=500)
+    pprint(response['results'])
+    place = get_place_details(g_client, response['results'][next(my_counter)]['place_id'])  # [counter][place_id]
     return place
 
 

@@ -11,6 +11,7 @@ import logging
 from telegram.ext import CallbackContext
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 import handlers.state_handler as sh
+from handlers.message_handler import decide_on_place
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
@@ -24,9 +25,15 @@ def get_live_gif():
 
 def button(update: Update, context):
     sh.set_user_state(context.user_data, sh.StateStages.ASKING_LIVE_LOCATION)
-
     query = update.callback_query
     val = query.data
+    if val in "12345":
+        km_button(update, context, val, query)
+    else:
+        places_choice_button(update, context, val)
+
+
+def km_button(update: Update, context, val, query):
     reply_markup = ReplyKeyboardRemove()
 
     # Store value
@@ -49,3 +56,16 @@ def button(update: Update, context):
 
     # Once we have live location
     logger.info(f"> Requesting user to activate Live Location. Chat ID: #{chat_id}")
+
+
+def places_choice_button(update, context, val):
+    chat_id = update.effective_chat.id
+    if val == "accept":
+        context.bot.send_message(chat_id=chat_id,
+                                 text="Challenge accepted! game is staring! 🤩🤩🤩",
+                                 )
+        ReplyKeyboardRemove()
+        sh.set_user_state(context.user_data, sh.StateStages.PLAYING_LOOP)
+    else:
+        fixed = val.split(',')
+        decide_on_place(update, context, chat_id, float(fixed[1]), float(fixed[2]))
