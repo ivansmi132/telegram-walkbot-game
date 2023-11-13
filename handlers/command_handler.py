@@ -20,7 +20,6 @@ db_handler = db.MongoDBHandler(MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME)
 
 
 def start(update: Update, context: CallbackContext):
-    context.user_data['finish'] = False
     sh.set_user_state(context.user_data, sh.StateStages.ASKING_DISTANCE)
     chat_id = update.effective_chat.id
     user_name = update.message.chat.first_name

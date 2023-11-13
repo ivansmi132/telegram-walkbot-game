@@ -1,5 +1,6 @@
 import sys
 
+import telegram
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -41,13 +42,18 @@ def button(update: Update, context):
     context.user_data['selected_distance'] = val
     logger.info(f"> User selected to travel {val[1]}km. Chat ID: #{chat_id}")
 
-    gif_path = get_live_gif()
+    try:
+        gif_path = get_live_gif()
 
-    context.bot.sendAnimation(
-        chat_id=chat_id,
-        animation=open(gif_path, 'rb'),
-        caption=f"{'^' * 30}\nNow, please activate your Live Location!"
-    )
+        context.bot.sendAnimation(
+            chat_id=chat_id,
+            animation=open(gif_path, 'rb'),
+            caption=f"{'^' * 30}\nNow, please activate your Live Location!"
+        )
+    except telegram.error.NetworkError:
+        context.bot.send_message(chat_id=chat_id, text="Now, please activate your Live Location!")
+
+
     logger.info(f"> Requesting user to activate Live Location. Chat ID: #{chat_id}")
 
 
@@ -56,7 +62,7 @@ def play_again_button(update: Update, context):
     val = query.data
     if val == 'play_yes':
         query.edit_message_text("For another round we go!")
-        start(update, context)
+        play(update, context)
     else:
         sh.set_user_state(context.user_data, sh.StateStages.BEFORE_START)
         query.edit_message_text("Thank you for playing!\nPlease don't forget to turn off your live location!")
