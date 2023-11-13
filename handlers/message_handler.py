@@ -7,9 +7,12 @@ from api.google_maps import (
     get_photo,
     haversine
 )
+import handlers.state_handler as sh
+import handlers.keyboard_handler as kb
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
+
 
 
 def text_response(update: Update, context: CallbackContext):
@@ -41,18 +44,25 @@ def live_location_receiver(update: Update, context: CallbackContext):
     if message["location"]["live_period"] is not None:
         msg_type += 1 << 1
 
-    if msg_type == 0:
+    user_state = sh.get_user_state(context.user_data)
+
+    if msg_type == 0 and user_state == sh.StateStages.ASKING_LIVE_LOCATION:
         # receiving a single (non-live) location
         logger.info(
             f"= Got Single (non-live) location {message['location']} on chat #{chat_id}"
         )
+        context.bot.send_message(chat_id, "You've sent a (non-life) location!\nPlease send a live location instead!")
     elif msg_type == 1:
-        # the user has stopped sharing his live location
-        logger.info(f"= Live location paused. Chat ID: #{chat_id}")
-        context.bot.send_message(chat_id, "Live location paused")
-
+        # live location ended
+        live_location_timeout(update, context, chat_id, user_state)
     elif msg_type == 2:
-        # At this point the user started sharing his live location
+        # At this point the user started sharing his live location ((this needs to be changed eventually so that it calls the loop for people to choose options))/////////////////////////////
+
+        if user_state == sh.StateStages.PAUSED:
+            context.bot.send_message(chat_id, "Thanks for re-sending the live-location, game unpaused!")
+
+        if not user_state == sh.StateStages.ASKING_LIVE_LOCATION:
+            context.bot.send_message(chat_id, "Sorry but there is no reason to share your live-location yet.")
 
         origin = (message["location"]["latitude"], message["location"]["longitude"])  # current location
 
@@ -85,7 +95,7 @@ def live_location_receiver(update: Update, context: CallbackContext):
                                  f"You will be going to:\n{location_name}\n"
                                  f"{context.user_data['destination']['result']['formatted_address']}\n"
                                  f"Your current distance from there is:\n"
-                                 f"{initial_distance}")
+                                 f"{initial_distance} meters")
 
         # assuming that photos are not always present, might be unnecessary, and have to test this better later
         try:
@@ -97,22 +107,37 @@ def live_location_receiver(update: Update, context: CallbackContext):
             logger.info(f"For chat #{chat_id} there are no photos of {location_name}")
             return
 
-    elif msg_type == 3:
+    elif msg_type == 3 and user_state == sh.StateStages.PLAYING_LOOP:
         # We get an updated location from the user sharing his live location
+        playing_loop(update, context, message)
 
-        context.user_data["current_location"] = {'latitude': message["location"]["latitude"],
-                                                 'longitude': message["location"]["longitude"]}
-        logger.info(
-            f"= Live location received: {message['location']}. Chat ID: #{chat_id}"
-        )
-        
+
+def live_location_timeout(update, context, chat_id, user_state):
+    logger.info(f"= Live location paused. Chat ID: #{chat_id}")
+    context.bot.send_message(chat_id, "Please Re-send Live Location!")
+    if user_state == sh.StateStages.LOCATION_SELECTION_LOOP:
+        kb.button(update, context)
+    elif user_state == sh.StateStages.PLAYING_LOOP:
+        sh.set_user_state(context.user_data, sh.StateStages.PAUSED)
+
+
+def playing_loop(update, context, message):
+    chat_id = update.effective_chat.id
+    context.user_data["current_location"] = {'latitude': message["location"]["latitude"],
+                                             'longitude': message["location"]["longitude"]}
+    logger.info(
+        f"= Live location received: {message['location']}. Chat ID: #{chat_id}"
+    )
+    try:
         current_distance = int((haversine(context.user_data['destination_location']['lat'],
                                           context.user_data['destination_location']['lng'],
                                           context.user_data['current_location']['latitude'],
                                           context.user_data['current_location']['longitude'])) * 1000)
+    except KeyError:
+        started = False
+        return
 
-        # updating the user with his distance from location
-        context.bot.send_message(chat_id,
-                                 f"Your current distance from\n{context.user_data['destination']['result']['name']}\n"
-                                 f"is {current_distance} meteres")
-
+    # updating the user with his distance from location
+    context.bot.send_message(chat_id,
+                             f"Your current distance from\n{context.user_data['destination']['result']['name']}\n"
+                             f"is {current_distance} meters")

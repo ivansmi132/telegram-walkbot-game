@@ -2,19 +2,26 @@ import logging
 from telegram.ext import CallbackContext
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardButton, \
     InlineKeyboardMarkup
+from bot_settings import MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME
 
-from bot import db_handler
+
+import handlers.state_handler as sh
+import handlers.database_handler as db
+import os
 
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
 
+# Create mongo handler instance
+db_handler = db.MongoDBHandler(MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME)
+
 
 def start(update: Update, context: CallbackContext):
+    sh.set_user_state(context.user_data, sh.StateStages.ASKING_DISTANCE)
     chat_id = update.effective_chat.id
     user_name = update.message.chat.first_name
     logger.info(f"> Start chat #{chat_id}, with: {user_name!r}")
-
 
     # Message #1: A lively welcome
     context.bot.send_message(
@@ -66,3 +73,7 @@ def leaderboard(update: Update, context: CallbackContext):
         chat_id=chat_id,
         text=text
     )
+
+def finish(update: Update, context: CallbackContext):
+
+    pass
