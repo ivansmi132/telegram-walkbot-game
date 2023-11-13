@@ -56,21 +56,8 @@ def live_location_receiver(update: Update, context: CallbackContext):
         # live location ended
         live_location_timeout(update, context, chat_id, user_state)
     elif msg_type == 2:
-        origin = (message["location"]["latitude"], message["location"]["longitude"])  # Current location
-
-        # Creating a Distance object for the user that will mainly be used to do various distance calculations
-        context.user_data["distance"] = Distance(origin, context.user_data["key_name"])
-        logger.info(
-            f"= Start of live period: Got location {message['location']} on chat #{chat_id}"
-        )
-
-        # Context.user_data['distance'].destination is the randomly generated location at the distance the user
-        # Specified. It's a dictionary of which the 'result' key holds the information of the random place
-        context.user_data['destination'] = get_location(*context.user_data['distance'].get_destination())
-
-        # Keeping the location of our destination in user_data
-        context.user_data['destination_location'] = context.user_data['destination']['result']['geometry']['location']
-
+        # set a location
+        set_new_place(context, message, chat_id)
         # The initial distance is derived by a haversine function
         initial_distance = int((context.user_data['distance'].current_distance_origin(
             context.user_data['destination_location']['lat'], context.user_data['destination_location']['lng'])) * 1000)
@@ -148,3 +135,20 @@ def playing_loop(update, context, message):
     context.bot.send_message(chat_id,
                              f"Your current distance from\n{context.user_data['destination']['result']['name']}\n"
                              f"is {current_distance} meters")
+
+
+def set_new_place(context, message, chat_id):
+    origin = (message["location"]["latitude"], message["location"]["longitude"])  # Current location
+
+    # Creating a Distance object for the user that will mainly be used to do various distance calculations
+    context.user_data["distance"] = Distance(origin, context.user_data["key_name"])
+    logger.info(
+        f"= Start of live period: Got location {message['location']} on chat #{chat_id}"
+    )
+
+    # Context.user_data['distance'].destination is the randomly generated location at the distance the user
+    # Specified. It's a dictionary of which the 'result' key holds the information of the random place
+    context.user_data['destination'] = get_location(*context.user_data['distance'].get_destination())
+
+    # Keeping the location of our destination in user_data
+    context.user_data['destination_location'] = context.user_data['destination']['result']['geometry']['location']
