@@ -32,7 +32,7 @@ def play(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     context.bot.send_message(
         chat_id=chat_id,
-        text="Welcome aboard, fearless explorer!\nGet ready to embark on an epic journey! 🚀",
+        text="Shalom shalom, fearless Israeli explorer!\nAre you ready to embark on an epic journey? 🚀",
         reply_markup=ReplyKeyboardRemove()
     )
 
@@ -48,8 +48,9 @@ def play(update: Update, context: CallbackContext):
     context.bot.send_message(
         chat_id=chat_id,
 
-        text="I'm your adventure companion \ntogether, we'll uncover hidden gems and thrilling locations 🗺️\n\n"
-             "But how far are you willing to travel for your next adventure?",
+        text="I'm your adventure companion!\nTogether, we'll uncover hidden gems and thrilling "
+             "locations in Israel 🇮🇱☀️\n\n"
+             "But how far are you willing to travel for your next adventure? 🗺️",
         reply_markup=InlineKeyboardMarkup(distance_keyboard)
     )
 
