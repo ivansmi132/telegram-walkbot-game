@@ -54,11 +54,11 @@ def live_location_receiver(update: Update, context: CallbackContext):
     if context.user_data.get("play_again", False):
         msg_type = 2
         context.user_data['play_again'] = False
-        
+
     lat = message["location"]["latitude"]
     long = message["location"]["longitude"]
     print(lat, long, "before starting")
-    
+
     user_state = sh.get_user_state(context.user_data)
 
     if msg_type == 0 and user_state == sh.StateStages.ASKING_LIVE_LOCATION:
@@ -117,16 +117,17 @@ def playing_loop(update, context, message):
 
         if old_location != 0 and abs(current_distance - old_distance) < 2:
             if context.user_data['not_moving_msg'] is None:
-                context.bot.send_message(chat_id = chat_id,
-                                         text = f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
+                context.user_data['not_moving_msg'] = context.bot.send_message(chat_id,
+                                                                               f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
         elif old_location != 0 and current_distance < old_distance:
             if context.user_data['not_moving_msg']:
                 context.bot.delete_message(chat_id=chat_id,
                                            message_id=context.user_data['not_moving_msg'].message_id)
                 context.user_data['not_moving_msg'] = None
-                context.bot.send_message(chat_id, f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
-                                                f"meters from your destination!")
-            
+            context.bot.edit_message_text(chat_id=chat_id, text=f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
+                                                                f"meters from your destination!",
+                                          message_id=context.user_data['msg'].message_id)
+
         elif old_location != 0 and current_distance <= 20:
             play_again_keyboard = [[
                 InlineKeyboardButton("Hell Yeah!", callback_data="play_yes"),
@@ -171,7 +172,8 @@ def set_new_place(context, chat_id, lat, long):
 
         # Context.user_data['distance'].destination is the randomly generated location at the distance the user
         # Specified. It's a dictionary of which the 'result' key holds the information of the random place
-        context.user_data['destination'] = get_location(*context.user_data['distance'].get_destination(), filter=None, data=context.user_data)
+        context.user_data['destination'] = get_location(*context.user_data['distance'].get_destination(), filter=None,
+                                                        data=context.user_data)
 
         # Keeping the location of our destination in user_data
         context.user_data['destination_location'] = context.user_data['destination']['result']['geometry']['location']
@@ -181,6 +183,7 @@ def set_new_place(context, chat_id, lat, long):
             image_exists = True
         except (IndexError, KeyError):
             image_exists = False
+
 
 def first_decide_on_place(update, context, chat_id, lat, long):
     # set a location
@@ -222,6 +225,7 @@ def first_decide_on_place(update, context, chat_id, lat, long):
         text="Do you accept the current challenge?! or would you rather have a different one?",
         reply_markup=InlineKeyboardMarkup(choice_keyboard)
     )
+
 
 def decide_on_place(update, context, chat_id, lat, long):
     # set a location

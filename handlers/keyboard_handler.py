@@ -11,7 +11,7 @@ import logging
 from telegram.ext import CallbackContext
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 import handlers.state_handler as sh
-from command_handler import play, start
+from handlers.command_handler import play, start
 from handlers.message_handler import decide_on_place
 
 # Import the logger from the main module
