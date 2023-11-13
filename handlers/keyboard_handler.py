@@ -52,12 +52,14 @@ def button(update: Update, context):
 
 
 def play_again_button(update: Update, context):
-    sh.set_user_state(context.user_data, sh.StateStages.WIN_SCREEN)
-
     query = update.callback_query
     val = query.data
     if val == 'play_yes':
-        start()
+        query.edit_message_text("For another round we go!")
+        start(update, context)
+    else:
+        sh.set_user_state(context.user_data, sh.StateStages.BEFORE_START)
+        query.edit_message_text("Thank you for playing!\nPlease don't forget to turn off your live location!")
 
 
 def places_choice_button(update, context):
@@ -66,10 +68,8 @@ def places_choice_button(update, context):
     val = query.data
     val = val.split('_')[1]
     if val == "accept":
-        context.bot.send_message(chat_id=chat_id,
-                                 text="Challenge accepted! game is staring! 🤩🤩🤩",
-                                 )
-        ReplyKeyboardRemove()
+        context.user_data['msg'] = context.bot.send_message(chat_id=chat_id, text="Game is staring! 🤩🤩🤩")
+        query.edit_message_text("Challenge accepted!")
         sh.set_user_state(context.user_data, sh.StateStages.PLAYING_LOOP)
     else:
         fixed = val.split(',')

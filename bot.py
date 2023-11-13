@@ -45,6 +45,7 @@ def main():
     # dp.add_handler(CommandHandler('command', callback))
     dp.add_handler(CommandHandler("start", ch.start))
     #dp.add_handler(CommandHandler("cancel", ch.cancel))
+    dp.add_handler(CommandHandler("finish", ch.force_finish))
     dp.add_handler(CommandHandler("location", kb.button))
     dp.add_handler(CommandHandler("score", ch.score))
     dp.add_handler(CommandHandler("leaderboard", ch.leaderboard))

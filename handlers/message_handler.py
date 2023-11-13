@@ -57,7 +57,6 @@ def live_location_receiver(update: Update, context: CallbackContext):
 
     lat = message["location"]["latitude"]
     long = message["location"]["longitude"]
-    print(lat, long, "before starting")
 
     user_state = sh.get_user_state(context.user_data)
 
@@ -74,11 +73,12 @@ def live_location_receiver(update: Update, context: CallbackContext):
     elif msg_type == 2:
         # got live location for the first time
         first_decide_on_place(update, context, chat_id, lat, long)
-        context.user_data['msg'] = context.bot.send_message(chat_id=chat_id, text="Start moving !!!")
         context.user_data['not_moving_msg'] = None
     elif msg_type == 3 and user_state == sh.StateStages.PLAYING_LOOP:
         # We get an updated location from the user sharing his live location
         playing_loop(update, context, message)
+
+
 
 
 def live_location_timeout(update, context, chat_id, user_state):
@@ -93,16 +93,11 @@ def live_location_timeout(update, context, chat_id, user_state):
 
 def playing_loop(update, context, message):
     chat_id = update.effective_chat.id
-    old_location = 0
-    try:
-        old_location = context.user_data["current_location"]
-    except KeyError:
-        old_location = 0
+    old_location = context.user_data.get("current_location", 0)
+
     context.user_data["current_location"] = {'latitude': message["location"]["latitude"],
                                              'longitude': message["location"]["longitude"]}
-    logger.info(
-        f"= Live location received: {message['location']}. Chat ID: #{chat_id}"
-    )
+
     try:
 
         current_distance = int((haversine(context.user_data['destination_location']['lat'],
@@ -115,7 +110,20 @@ def playing_loop(update, context, message):
                                           old_location['latitude'],
                                           old_location['longitude'])) * 1000)
 
-        if old_location != 0 and abs(current_distance - old_distance) < 2:
+        if current_distance <= 20:
+            play_again_keyboard = [[
+                InlineKeyboardButton("Hell Yeah!", callback_data="play_yes"),
+                InlineKeyboardButton("No, Leave Me Alone", callback_data="play_no"),
+            ]]
+            context.bot.send_message(chat_id, f"🏆🏆🏆 Congratulations! 🏆🏆🏆\n"
+                                              f"You have arrived at your destination!\n"
+                                              f"Turn turn off your Live Location")
+            sh.set_user_state(context.user_data, sh.StateStages.WIN_SCREEN)
+
+            context.bot.send_message(chat_id, f"Ready for another round? 😉",
+                                     reply_markup=InlineKeyboardMarkup(play_again_keyboard))
+            context.user_data['play_again'] = True
+        elif old_location != 0 and abs(current_distance - old_distance) < 2:
             if context.user_data['not_moving_msg'] is None:
                 context.user_data['not_moving_msg'] = context.bot.send_message(chat_id,
                                                                                f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
@@ -128,17 +136,6 @@ def playing_loop(update, context, message):
                                                                 f"meters from your destination!",
                                           message_id=context.user_data['msg'].message_id)
 
-        elif old_location != 0 and current_distance <= 20:
-            play_again_keyboard = [[
-                InlineKeyboardButton("Hell Yeah!", callback_data="play_yes"),
-                InlineKeyboardButton("No, Leave Me Alone", callback_data="play_no"),
-            ]]
-            context.bot.send_message(chat_id, f"🏆🏆🏆 Congratulations! 🏆🏆🏆\n"
-                                              f"You have arrived at your destination!\n"
-                                              f"Turn turn off your Live Location")
-            context.bot.send_message(chat_id, f"Ready for another round? 😉",
-                                     reply_markup=InlineKeyboardMarkup(play_again_keyboard))
-            context.user_data['play_again'] = True
 
         elif old_location != 0:
             if context.user_data['not_moving_msg']:
@@ -153,10 +150,10 @@ def playing_loop(update, context, message):
         started = False
         return
 
-    # updating the user with his distance from location
-    context.bot.send_message(chat_id,
-                             f"Your current distance from\n{context.user_data['destination']['result']['name']}\n"
-                             f"is {current_distance} meters")
+    logger.info(
+        f"= Live location received. Chat ID: #{chat_id}. distance: {current_distance}, place: {context.user_data['destination']['result']['name']}"
+    )
+
 
 
 def set_new_place(context, chat_id, lat, long):

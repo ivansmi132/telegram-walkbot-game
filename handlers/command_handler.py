@@ -7,6 +7,7 @@ from telegram.ext import CallbackContext
 import handlers.database_handler as db
 import handlers.state_handler as sh
 from bot_settings import MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME
+import handlers.message_handler as mh
 
 # from bot import db_handler
 
@@ -82,5 +83,9 @@ def leaderboard(update: Update, context: CallbackContext):
     )
 
 
-def finish(update: Update, context: CallbackContext):
-    pass
+def force_finish(update: Update, context: CallbackContext):
+    message = {}
+    message["location"] = {}
+    message["location"]["latitude"] = context.user_data['destination_location']['lat']
+    message["location"]["longitude"] = context.user_data['destination_location']['lng']
+    mh.playing_loop(update, context, message)

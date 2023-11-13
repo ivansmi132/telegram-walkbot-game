@@ -15,7 +15,7 @@ class StateStages(Enum):
     PLAYING_LOOP = 5  # while not done ----> 5, arrived ----> 6, /cancel ----> 0, /start ----> 1
     WIN_SCREEN = 6  # instant ----> 7,
     REPLAY_SCREEN = 7  # (yes, /start) ----> 1, (no, /cancel) ----> 0,
-    PAUSED = 8  # live sent ---->
+    PAUSED = 9  # live sent ---->
 
 
 def set_user_state(user_data, state):
