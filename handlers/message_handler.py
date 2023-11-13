@@ -1,17 +1,21 @@
 import logging
-from telegram.ext import CallbackContext
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, \
+
+from telegram import Update, InlineKeyboardButton, \
     InlineKeyboardMarkup
+from telegram.ext import CallbackContext
+
+import handlers.keyboard_handler as kb
+import handlers.state_handler as sh
 from api.google_maps import (
     Distance,
     get_location,
     get_photo,
     haversine
 )
+
 import handlers.state_handler as sh
 import handlers.keyboard_handler as kb
 from telegram import InputMediaPhoto
-
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
@@ -45,9 +49,16 @@ def live_location_receiver(update: Update, context: CallbackContext):
         msg_type += 1
     if message["location"]["live_period"] is not None:
         msg_type += 1 << 1
+
+    # This needs to be replaces by STATE machine in the future
+    if context.user_data.get("play_again", False):
+        msg_type = 2
+        context.user_data['play_again'] = False
+        
     lat = message["location"]["latitude"]
-    long = message["location"]["latitude"]
+    long = message["location"]["longitude"]
     print(lat, long, "before starting")
+    
     user_state = sh.get_user_state(context.user_data)
 
     if msg_type == 0 and user_state == sh.StateStages.ASKING_LIVE_LOCATION:
@@ -55,7 +66,8 @@ def live_location_receiver(update: Update, context: CallbackContext):
         logger.info(
             f"= Got Single (non-live) location {message['location']} on chat #{chat_id}"
         )
-        context.bot.send_message(chat_id, "You've sent a (non-life) location!\nPlease send a live location instead!")
+        context.bot.send_message(chat_id, "⚠️ Wrong Location Sent ⚠️\nWoops. You've sent us a location, "
+                                          "but not your Live Location!\nPlease activate your Live Location instead!")
     elif msg_type == 1:
         # live location ended
         live_location_timeout(update, context, chat_id, user_state)
@@ -71,7 +83,8 @@ def live_location_receiver(update: Update, context: CallbackContext):
 
 def live_location_timeout(update, context, chat_id, user_state):
     logger.info(f"= Live location paused. Chat ID: #{chat_id}")
-    context.bot.send_message(chat_id, "Please Re-send Live Location!")
+    context.bot.send_message(chat_id, "⚠️ Live Location Lost ⚠️\n\nOh no, we can no longer find you! 😬")
+    context.bot.send_message(chat_id, "Please activate your Live Location to continue.")
     if user_state == sh.StateStages.LOCATION_SELECTION_LOOP:
         kb.button(update, context)
     elif user_state == sh.StateStages.PLAYING_LOOP:
@@ -91,6 +104,7 @@ def playing_loop(update, context, message):
         f"= Live location received: {message['location']}. Chat ID: #{chat_id}"
     )
     try:
+
         current_distance = int((haversine(context.user_data['destination_location']['lat'],
                                           context.user_data['destination_location']['lng'],
                                           context.user_data['current_location']['latitude'],
@@ -100,16 +114,25 @@ def playing_loop(update, context, message):
                                           context.user_data['destination_location']['lng'],
                                           old_location['latitude'],
                                           old_location['longitude'])) * 1000)
+
         if old_location != 0 and abs(current_distance - old_distance) < 2:
-            if context.user_data['not_moving_msg'] is None:
-                context.user_data['not_moving_msg'] = context.bot.send_message(chat_id, f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
+            context.bot.send_message(chat_id, f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
         elif old_location != 0 and current_distance < old_distance:
-            if context.user_data['not_moving_msg']:
-                context.bot.delete_message(chat_id=chat_id,
-                                           message_id=context.user_data['not_moving_msg'].message_id)
-                context.user_data['not_moving_msg'] = None
-            context.bot.edit_message_text(chat_id=chat_id, text=f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
-                                              f"meters from your destination!", message_id=context.user_data['msg'].message_id)
+            context.bot.send_message(chat_id, f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
+                                              f"meters from your destination!")
+            
+        elif old_location != 0 and current_distance <= 20:
+            play_again_keyboard = [[
+                InlineKeyboardButton("Hell Yeah!", callback_data="play_yes"),
+                InlineKeyboardButton("No, Leave Me Alone", callback_data="play_no"),
+            ]]
+            context.bot.send_message(chat_id, f"🏆🏆🏆 Congratulations! 🏆🏆🏆\n"
+                                              f"You have arrived at your destination!\n"
+                                              f"Turn turn off your Live Location")
+            context.bot.send_message(chat_id, f"Ready for another round? 😉",
+                                     reply_markup=InlineKeyboardMarkup(play_again_keyboard))
+            context.user_data['play_again'] = True
+
         elif old_location != 0:
             if context.user_data['not_moving_msg']:
                 context.bot.delete_message(chat_id=chat_id,

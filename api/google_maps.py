@@ -1,6 +1,10 @@
+import logging
 import math
+import random
 from math import radians, cos, sin, asin, sqrt
+
 import googlemaps
+from bot_settings import GOOGLE_API_KEY
 from googlemaps import convert
 from googlemaps.places import find_place, places_nearby
 import logging
@@ -8,6 +12,7 @@ import geopy.distance
 import random
 from bot_settings import GOOGLE_API_KEY
 from pprint import pprint
+
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
@@ -54,7 +59,7 @@ my_counter = counter_generator()
 def get_location(lat=None, long=None, filter=None, data=None):
     global my_counter
     # defined here only for now.
-    filter = "Sushi"
+    filter = "Burgers"
 
     # Funny enough, defining the location_bias like this, actually made it track my computer's location
     # It seems like google fetches your location if lat and long are NONE, but need further testing
@@ -65,7 +70,7 @@ def get_location(lat=None, long=None, filter=None, data=None):
 
     g_client = googlemaps.Client(key=GOOGLE_API_KEY)
     #response = find_place(g_client, filter, "textquery", location_bias=location_bias)
-    response = places_nearby(g_client, (lat, long), radius=500)
+    response = places_nearby(g_client, (lat, long), radius=150)
     pprint(response['results'])
     place = get_place_details(g_client, response['results'][next(my_counter)]['place_id'])  # [counter][place_id]
     return place
@@ -113,8 +118,6 @@ class Distance:
         delta_lat_deg, delta_lon_deg = math.degrees(delta_lat), math.degrees(delta_lon)
 
         return origin[0] + delta_lat_deg, origin[1] + delta_lon_deg
-
-    from math import radians, cos, sin, asin, sqrt
 
     def current_distance_origin(self, lat1, lon1):
         """

@@ -57,7 +57,8 @@ def main():
     dp.add_handler(MessageHandler(Filters.location, mh.live_location_receiver))
 
     # Buttons
-    dp.add_handler(CallbackQueryHandler(kb.button))
+    dp.add_handler(CallbackQueryHandler(kb.play_again_button, pattern="^play"))
+    dp.add_handler(CallbackQueryHandler(kb.button, pattern="^n"))
 
     # Google Maps location (this is just here so you guys can see the data
     # pprint(gm.get_location())
