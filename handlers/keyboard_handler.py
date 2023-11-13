@@ -2,7 +2,7 @@ from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     KeyboardButton,
-    ReplyKeyboardMarkup, ForceReply,
+    ReplyKeyboardMarkup, ForceReply, ReplyKeyboardRemove,
 )
 
 import os
@@ -13,7 +13,6 @@ from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 project_root = os.getcwd()
 live_gif = os.path.join(project_root, "live.gif")
 
-
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
 
@@ -21,8 +20,7 @@ logger = logging.getLogger(__name__)
 def button(update: Update, context):
     query = update.callback_query
     val = query.data
-    reply_markup = ReplyKeyboardRemove()
-    
+
     # Store value
     context.user_data["key_name"] = int(val)
 
@@ -36,8 +34,8 @@ def button(update: Update, context):
     context.bot.sendAnimation(
         chat_id=chat_id,
         animation=open(live_gif, 'rb'),
-        caption="Now, it's time to activate Live Location!"
+        caption=f"{'^'*30}\nNow, please activate your Live Location!"
     )
 
     # Once we have live location
-    logger.info(f"> Requesting user to share live location. Chat ID: #{chat_id}")
+    logger.info(f"> Requesting user to activate Live Location. Chat ID: #{chat_id}")

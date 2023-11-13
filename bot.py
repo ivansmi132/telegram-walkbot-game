@@ -1,13 +1,6 @@
 from telegram import Update
-from bot_settings import BOT_TOKEN, MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME
-from telegram.ext import (
-    Updater,
-    CommandHandler,
-    MessageHandler,
-    Filters,
-    PicklePersistence,
-    CallbackQueryHandler,
-)
+from bot_settings import (BOT_TOKEN, MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME)
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, PicklePersistence, CallbackQueryHandler)
 
 # Default libraries
 import logging
@@ -36,7 +29,7 @@ def main():
     bot_key = BOT_TOKEN
 
     # Persistence file ( This is how the user data can be saved even after turning off our bot )
-    #my_persistence = PicklePersistence(filename="saved_memory")
+    # my_persistence = PicklePersistence(filename="saved_memory")
 
     # Updater
     my_bot = Updater(token=bot_key, use_context=True)
@@ -54,7 +47,6 @@ def main():
     # Messages handler
     # dp.add_handler(MessageHandler(Filters.TYPE, callback))
     dp.add_handler(MessageHandler(Filters.text, mh.text_response))
-    dp.add_handler(MessageHandler(Filters.voice, mh.voice_response))
     dp.add_handler(MessageHandler(Filters.location, mh.live_location_receiver))
 
     # Buttons

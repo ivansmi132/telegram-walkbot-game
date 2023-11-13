@@ -5,6 +5,8 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardR
 
 from bot import db_handler
 
+# from bot import db_handler
+
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
@@ -15,11 +17,10 @@ def start(update: Update, context: CallbackContext):
     user_name = update.message.chat.first_name
     logger.info(f"> Start chat #{chat_id}, with: {user_name!r}")
 
-
     # Message #1: A lively welcome
     context.bot.send_message(
         chat_id=chat_id,
-        text="Welcome aboard, fearless explorer! Get ready to embark on an epic journey! 🚀",
+        text="Welcome aboard, fearless explorer!\nGet ready to embark on an epic journey! 🚀",
         reply_markup=ReplyKeyboardRemove()
     )
 
@@ -35,8 +36,8 @@ def start(update: Update, context: CallbackContext):
     context.bot.send_message(
         chat_id=chat_id,
 
-        text="I'm your adventure companion, and together, we'll uncover hidden gems and thrilling locations 🗺️\n\n"
-             "How far are you willing to travel for your next adventure?",
+        text="I'm your adventure companion \ntogether, we'll uncover hidden gems and thrilling locations 🗺️\n\n"
+             "But how far are you willing to travel for your next adventure?",
         reply_markup=InlineKeyboardMarkup(distance_keyboard)
     )
 

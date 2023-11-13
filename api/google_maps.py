@@ -43,7 +43,7 @@ def get_place_details(client, place_id, fields=None, language=None):
 
 def get_location(lat=None, long=None, filter=None):
     # defined here only for now.
-    filter = "Sushi"
+    filter = 'Burger'
 
     # Funny enough, defining the location_bias like this, actually made it track my computer's location
     # It seems like google fetches your location if lat and long are NONE, but need further testing
@@ -55,6 +55,8 @@ def get_location(lat=None, long=None, filter=None):
     g_client = googlemaps.Client(key=GOOGLE_API_KEY)
     response = find_place(g_client, filter, "textquery", location_bias=location_bias)
     place = get_place_details(g_client, response["candidates"][0]["place_id"])
+
+
     # pprint(place)
     return place
 
