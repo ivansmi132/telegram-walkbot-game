@@ -56,21 +56,8 @@ def live_location_receiver(update: Update, context: CallbackContext):
         # live location ended
         live_location_timeout(update, context, chat_id, user_state)
     elif msg_type == 2:
-        origin = (message["location"]["latitude"], message["location"]["longitude"])  # Current location
-
-        # Creating a Distance object for the user that will mainly be used to do various distance calculations
-        context.user_data["distance"] = Distance(origin, context.user_data["key_name"])
-        logger.info(
-            f"= Start of live period: Got location {message['location']} on chat #{chat_id}"
-        )
-
-        # Context.user_data['distance'].destination is the randomly generated location at the distance the user
-        # Specified. It's a dictionary of which the 'result' key holds the information of the random place
-        context.user_data['destination'] = get_location(*context.user_data['distance'].get_destination())
-
-        # Keeping the location of our destination in user_data
-        context.user_data['destination_location'] = context.user_data['destination']['result']['geometry']['location']
-
+        # set a location
+        set_new_place(context, message, chat_id)
         # The initial distance is derived by a haversine function
         initial_distance = int((context.user_data['distance'].current_distance_origin(
             context.user_data['destination_location']['lat'], context.user_data['destination_location']['lng'])) * 1000)
@@ -97,14 +84,14 @@ def live_location_receiver(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id,
                                  f"Looks familiar? 🧐\n\nYour mission: Observe the photo above and try to "
                                  f"get there without using a map 🚫🗺")
-    elif msg_type == 3: #and user_state == sh.StateStages.PLAYING_LOOP
+    elif msg_type == 3:  # and user_state == sh.StateStages.PLAYING_LOOP
         # We get an updated location from the user sharing his live location
         playing_loop(update, context, message)
 
 
 def live_location_timeout(update, context, chat_id, user_state):
     logger.info(f"= Live location paused. Chat ID: #{chat_id}")
-    context.bot.send_message(chat_id, "Please Re-send Live Location!")
+    context.bot.send_message(chat_id, "Woops. Live Location lost! 😬\nPlease activate your Live Location to continue.")
     if user_state == sh.StateStages.LOCATION_SELECTION_LOOP:
         kb.button(update, context)
     elif user_state == sh.StateStages.PLAYING_LOOP:
@@ -130,21 +117,34 @@ def playing_loop(update, context, message):
                                           context.user_data['current_location']['longitude'])) * 1000)
         if old_location != 0:
             old_distance = int((haversine(context.user_data['destination_location']['lat'],
-                                        context.user_data['destination_location']['lng'],
-                                        old_location['latitude'],
-                                        old_location['longitude'])) * 1000)
-        if old_location != 0 and current_distance < old_distance:
-            context.bot.send_message(chat_id, f"Hotter")
-        elif old_location != 0 and abs(current_distance - old_distance) < 10:
-            context.bot.send_message(chat_id, f"It seems like you haven't moved!")
+                                          context.user_data['destination_location']['lng'],
+                                          old_location['latitude'],
+                                          old_location['longitude'])) * 1000)
+        if old_location != 0 and abs(current_distance - old_distance) < 2:
+            context.bot.send_message(chat_id, f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
+        elif old_location != 0 and current_distance < old_distance:
+            context.bot.send_message(chat_id, f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
+                                              f"meters from your destination!")
         elif old_location != 0:
-            context.bot.send_message(chat_id, f"Colder")
+            context.bot.send_message(chat_id, f"🥶🥶🥶 Getting colder 🥶🥶🥶\n you are {current_distance}")
 
     except KeyError:
         started = False
         return
 
-    # updating the user with his distance from location
-    context.bot.send_message(chat_id,
-                             f"Your current distance from\n{context.user_data['destination']['result']['name']}\n"
-                             f"is {current_distance} meters")
+
+def set_new_place(context, message, chat_id):
+    origin = (message["location"]["latitude"], message["location"]["longitude"])  # Current location
+
+    # Creating a Distance object for the user that will mainly be used to do various distance calculations
+    context.user_data["distance"] = Distance(origin, context.user_data["key_name"])
+    logger.info(
+        f"= Start of live period: Got location {message['location']} on chat #{chat_id}"
+    )
+
+    # Context.user_data['distance'].destination is the randomly generated location at the distance the user
+    # Specified. It's a dictionary of which the 'result' key holds the information of the random place
+    context.user_data['destination'] = get_location(*context.user_data['distance'].get_destination())
+
+    # Keeping the location of our destination in user_data
+    context.user_data['destination_location'] = context.user_data['destination']['result']['geometry']['location']
