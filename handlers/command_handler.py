@@ -1,13 +1,12 @@
 import logging
-from telegram.ext import CallbackContext
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardButton, \
+
+from telegram import Update, ReplyKeyboardRemove, InlineKeyboardButton, \
     InlineKeyboardMarkup
-from bot_settings import MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME
+from telegram.ext import CallbackContext
 
-
-import handlers.state_handler as sh
 import handlers.database_handler as db
-import os
+import handlers.state_handler as sh
+from bot_settings import MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME
 
 # from bot import db_handler
 
@@ -20,12 +19,17 @@ db_handler = db.MongoDBHandler(MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME)
 
 
 def start(update: Update, context: CallbackContext):
+    context.user_data['finish'] = False
     sh.set_user_state(context.user_data, sh.StateStages.ASKING_DISTANCE)
     chat_id = update.effective_chat.id
     user_name = update.message.chat.first_name
     logger.info(f"> Start chat #{chat_id}, with: {user_name!r}")
+    play(update, context)
 
+
+def play(update: Update, context: CallbackContext):
     # Message #1: A lively welcome
+    chat_id = update.effective_chat.id
     context.bot.send_message(
         chat_id=chat_id,
         text="Welcome aboard, fearless explorer!\nGet ready to embark on an epic journey! 🚀",
@@ -34,11 +38,11 @@ def start(update: Update, context: CallbackContext):
 
     # Message #2: Choose your distance
     distance_keyboard = [[
-        InlineKeyboardButton("1km", callback_data="1"),
-        InlineKeyboardButton("2km", callback_data="2"),
-        InlineKeyboardButton("3km", callback_data="3"),
-        InlineKeyboardButton("4km", callback_data="4"),
-        InlineKeyboardButton("5km", callback_data="5"),
+        InlineKeyboardButton("1km", callback_data="n1"),
+        InlineKeyboardButton("2km", callback_data="n2"),
+        InlineKeyboardButton("3km", callback_data="n3"),
+        InlineKeyboardButton("4km", callback_data="n4"),
+        InlineKeyboardButton("5km", callback_data="n5"),
     ]]
 
     context.bot.send_message(
@@ -50,6 +54,7 @@ def start(update: Update, context: CallbackContext):
     )
 
     logger.info(f"> Requesting user to select desired distance. Chat ID: #{chat_id}")
+
 
 
 def score(update: Update, context: CallbackContext):
@@ -76,6 +81,6 @@ def leaderboard(update: Update, context: CallbackContext):
         text=text
     )
 
-def finish(update: Update, context: CallbackContext):
 
+def finish(update: Update, context: CallbackContext):
     pass
