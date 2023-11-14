@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 db_handler = db.MongoDBHandler(MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME)
 
 
+
 def start(update: Update, context: CallbackContext):
     sh.set_user_state(context.user_data, sh.StateStages.ASKING_DISTANCE)
     chat_id = update.effective_chat.id
@@ -28,6 +29,7 @@ def start(update: Update, context: CallbackContext):
 
 
 def play(update: Update, context: CallbackContext):
+    sh.set_user_state(context.user_data, sh.StateStages.ASKING_DISTANCE)
     # Message #1: A lively welcome
     chat_id = update.effective_chat.id
     context.bot.send_message(

@@ -1,4 +1,5 @@
 import sys
+from datetime import time
 
 import telegram
 from telegram import (
@@ -14,6 +15,7 @@ from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 import handlers.state_handler as sh
 from handlers.command_handler import play, start
 from handlers.message_handler import decide_on_place
+from datetime import datetime, timedelta
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
@@ -34,7 +36,7 @@ def button(update: Update, context):
 
     # Store value
     context.user_data["key_name"] = int(val[1])
-
+    context.user_data["walk_amount"] = int(val[1])
     # tell the user it worked
     query.answer(f"🔥 Whoah, {val[1]}km?! That's awesome! 🔥")
     query.edit_message_text(f"Wow! You've selected to travel {val[1]}km.\nLet's start the adventure! 🤩")
@@ -74,6 +76,7 @@ def places_choice_button(update, context):
     val = query.data
     val = val.split('_')[1]
     if val == "accept":
+        context.user_data['point_timer'] = datetime.now()
         context.user_data['msg'] = context.bot.send_message(chat_id=chat_id, text="Game is staring! 🤩🤩🤩")
         query.edit_message_text("Challenge accepted!")
         sh.set_user_state(context.user_data, sh.StateStages.PLAYING_LOOP)
