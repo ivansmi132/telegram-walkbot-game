@@ -133,7 +133,7 @@ def playing_loop(update, context, message):
                 InlineKeyboardButton("Yalla let's go!", callback_data="play_yes"),
                 InlineKeyboardButton("Leave me alone, okay?", callback_data="play_no"),
             ]]
-            points = int(timedelta(minutes=9)*100*context.user_data["walk_amount"]/(context.user_data['point_timer'] - datetime.now() ))
+            points = abs(int(timedelta(minutes=9)*100*context.user_data["walk_amount"]/(context.user_data['point_timer'] - datetime.now() )))
             points = points if points <= 100 else 100
             db_handler.score_increment(chat_id, points)
             total_score = db_handler.find_score(chat_id)
