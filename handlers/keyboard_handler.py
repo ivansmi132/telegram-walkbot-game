@@ -75,7 +75,7 @@ def places_choice_button(update, context):
     query = update.callback_query
     val = query.data
     val = val.split('_')[1]
-    if val == "Yalla let's go":
+    if val == "accept":
         context.user_data['point_timer'] = datetime.now()
         context.user_data['msg'] = context.bot.send_message(chat_id=chat_id, text="Yalla let's go!")
         query.edit_message_text("Yalla let's go!")
