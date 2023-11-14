@@ -3,6 +3,7 @@ import logging
 from telegram import Update, InlineKeyboardButton, \
     InlineKeyboardMarkup
 from telegram.ext import CallbackContext
+from datetime import datetime, timedelta
 
 import handlers.keyboard_handler as kb
 import handlers.state_handler as sh
@@ -12,13 +13,17 @@ from api.google_maps import (
     get_photo,
     haversine
 )
+from bot_settings import MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME
 
+import handlers.database_handler as db
 import handlers.state_handler as sh
 import handlers.keyboard_handler as kb
 from telegram import InputMediaPhoto
 
 # Import the logger from the main module
 logger = logging.getLogger(__name__)
+
+db_handler = db.MongoDBHandler(MONGO_CONNECTION, DATABASE_NAME, COLLECTION_NAME)
 
 
 def text_response(update: Update, context: CallbackContext):
@@ -50,11 +55,6 @@ def live_location_receiver(update: Update, context: CallbackContext):
     if message["location"]["live_period"] is not None:
         msg_type += 1 << 1
 
-    # This needs to be replaces by STATE machine in the future
-    if context.user_data.get("play_again", False):
-        msg_type = 2
-        context.user_data['play_again'] = False
-
     lat = message["location"]["latitude"]
     long = message["location"]["longitude"]
 
@@ -67,18 +67,33 @@ def live_location_receiver(update: Update, context: CallbackContext):
         )
         context.bot.send_message(chat_id, "⚠️ Wrong Location Sent ⚠️\nWoops. You've sent us a location, "
                                           "but not your Live Location!\nPlease activate your Live Location instead!")
-    elif msg_type == 1:
+    elif msg_type == 1 and user_state == sh.StateStages.PLAYING_LOOP:
         # live location ended
         live_location_timeout(update, context, chat_id, user_state)
     elif msg_type == 2:
         # got live location for the first time
-        first_decide_on_place(update, context, chat_id, lat, long)
-        context.user_data['not_moving_msg'] = None
-    elif msg_type == 3 and user_state == sh.StateStages.PLAYING_LOOP:
+        if user_state == sh.StateStages.ASKING_LIVE_LOCATION:
+            first_decide_on_place(update, context, chat_id, lat, long)
+            context.user_data['not_moving_msg'] = None
+        elif user_state == sh.StateStages.PAUSED:
+            sh.set_user_state(context.user_data, sh.StateStages.PLAYING_LOOP)
+    elif msg_type == 3 and user_state == sh.StateStages.PLAYING_LOOP and once_within_time(context, 10):
         # We get an updated location from the user sharing his live location
         playing_loop(update, context, message)
 
 
+def once_within_time(context, delta_seconds):
+    last_time = context.user_data.get('last_time', None)
+    if last_time is None:
+        context.user_data['last_time'] = datetime.now()
+        return True
+    current_time = datetime.now()
+
+    if current_time - last_time >= timedelta(seconds=delta_seconds):
+        context.user_data['last_time'] = current_time
+        return True
+    else:
+        return False
 
 
 def live_location_timeout(update, context, chat_id, user_state):
@@ -94,6 +109,9 @@ def live_location_timeout(update, context, chat_id, user_state):
 def playing_loop(update, context, message):
     chat_id = update.effective_chat.id
     old_location = context.user_data.get("current_location", 0)
+
+    # Logging
+    logger.info(f"= User: {chat_id} just entered playing_loop")
 
     context.user_data["current_location"] = {'latitude': message["location"]["latitude"],
                                              'longitude': message["location"]["longitude"]}
@@ -115,13 +133,18 @@ def playing_loop(update, context, message):
                 InlineKeyboardButton("Yalla let's go!", callback_data="play_yes"),
                 InlineKeyboardButton("Leave me alone, okay?", callback_data="play_no"),
             ]]
+            points = int(timedelta(minutes=9)*100*context.user_data["walk_amount"]/(context.user_data['point_timer'] - datetime.now() ))
+            points = points if points <= 100 else 100
+            db_handler.score_increment(chat_id, points)
+            total_score = db_handler.find_score(chat_id)
+
             context.bot.send_message(chat_id, f"🏆🏆🏆 Congratulations! 🏆🏆🏆\n"
+                                              f"You got {points} point. for a total score of {total_score}\n"
                                               f"You have arrived at your destination!\n")
             sh.set_user_state(context.user_data, sh.StateStages.WIN_SCREEN)
 
             context.bot.send_message(chat_id, f"Ready for another round? 😉",
                                      reply_markup=InlineKeyboardMarkup(play_again_keyboard))
-            context.user_data['play_again'] = True
         elif old_location != 0 and abs(current_distance - old_distance) < 2:
             if context.user_data['not_moving_msg'] is None:
                 context.user_data['not_moving_msg'] = context.bot.send_message(chat_id,
@@ -183,6 +206,7 @@ def set_new_place(context, chat_id, lat, long):
 
 
 def first_decide_on_place(update, context, chat_id, lat, long):
+    sh.set_user_state(context.user_data, sh.StateStages.LOCATION_SELECTION_LOOP)
     # set a location
     set_new_place(context, chat_id, lat, long)
     # The initial distance is derived by a haversine function
