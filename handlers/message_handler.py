@@ -98,9 +98,9 @@ def once_within_time(context, delta_seconds):
 
 def live_location_timeout(update, context, chat_id, user_state):
     logger.info(f"= Live location paused. Chat ID: #{chat_id}")
-    context.bot.send_message(chat_id, "⚠️ Live Location Lost ⚠️\n\nOh no, we can no longer find you! 😬")
-    context.bot.send_message(chat_id, "Please activate or reactivate your Live Location to continue.")
-    if user_state == sh.StateStages.LOCATION_SELECTION_LOOP: #look into this
+    context.bot.send_message(chat_id, "⚠️ Live Location Lost ⚠️\n\nAy caramba, we can no longer find you! 😬")
+    context.bot.send_message(chat_id, "Please activate your Live Location to continue.")
+    if user_state == sh.StateStages.LOCATION_SELECTION_LOOP:
         kb.button(update, context)
     elif user_state == sh.StateStages.PLAYING_LOOP:
         sh.set_user_state(context.user_data, sh.StateStages.PAUSED)
@@ -130,18 +130,17 @@ def playing_loop(update, context, message):
 
         if current_distance <= 20:
             play_again_keyboard = [[
-                InlineKeyboardButton("Hell Yeah!", callback_data="play_yes"),
-                InlineKeyboardButton("No, Leave Me Alone", callback_data="play_no"),
+                InlineKeyboardButton("Yalla let's go!", callback_data="play_yes"),
+                InlineKeyboardButton("Leave me alone, okay?", callback_data="play_no"),
             ]]
-            points = int(timedelta(minutes=9)*100/(context.user_data["walk_amount"])*(context.user_data['point_timer'] - datetime.now() ))  # might need to define a better score function
+            points = int(timedelta(minutes=9)*100*context.user_data["walk_amount"]/(context.user_data['point_timer'] - datetime.now() ))
+            points = points if points <= 100 else 100
             db_handler.score_increment(chat_id, points)
             total_score = db_handler.find_score(chat_id)
 
             context.bot.send_message(chat_id, f"🏆🏆🏆 Congratulations! 🏆🏆🏆\n"
-                                              f"You have arrived at your destination!\n"
                                               f"You got {points} point. for a total score of {total_score}\n"
-                                              f"Please turn off your Live Location")
-
+                                              f"You have arrived at your destination!\n")
             sh.set_user_state(context.user_data, sh.StateStages.WIN_SCREEN)
 
             context.bot.send_message(chat_id, f"Ready for another round? 😉",
@@ -149,14 +148,15 @@ def playing_loop(update, context, message):
         elif old_location != 0 and abs(current_distance - old_distance) < 2:
             if context.user_data['not_moving_msg'] is None:
                 context.user_data['not_moving_msg'] = context.bot.send_message(chat_id,
-                                                                               f"Feeling lost? 🤔\nIt seems like you haven't moved!\n")
+                                                                               f"Feeling lost? 🤔\nIt seems like you "
+                                                                               f"haven't moved!\n Are you taking a nap?")
         elif old_location != 0 and current_distance < old_distance:
             if context.user_data['not_moving_msg']:
                 context.bot.delete_message(chat_id=chat_id,
                                            message_id=context.user_data['not_moving_msg'].message_id)
                 context.user_data['not_moving_msg'] = None
-            context.bot.edit_message_text(chat_id=chat_id, text=f"🔥🔥🔥 Getting hotter 🔥🔥🔥\n you are {current_distance}"
-                                                                f"meters from your destination!",
+            context.bot.edit_message_text(chat_id=chat_id, text=f"🔥🔥🔥 Getting HOTTER 🔥🔥🔥\n you are {current_distance}"
+                                                                f" meters away from your destination!",
                                           message_id=context.user_data['msg'].message_id)
 
 
@@ -165,8 +165,8 @@ def playing_loop(update, context, message):
                 context.bot.delete_message(chat_id=chat_id,
                                            message_id=context.user_data['not_moving_msg'].message_id)
                 context.user_data['not_moving_msg'] = None
-            context.bot.edit_message_text(chat_id=chat_id, text=f"🥶🥶🥶 Getting colder 🥶🥶🥶\n you are {current_distance}"
-                                                                f"meters from your destination",
+            context.bot.edit_message_text(chat_id=chat_id, text=f"🥶🥶🥶 Getting COLDER 🥶🥶🥶\n you are {current_distance}"
+                                                                f" meters away from your destination",
                                           message_id=context.user_data['msg'].message_id)
 
     except KeyError:
@@ -233,17 +233,17 @@ def first_decide_on_place(update, context, chat_id, lat, long):
         logger.info(f"For chat #{chat_id} there are no photos of {location_name}")
         return
     context.bot.send_message(chat_id,
-                             f"Looks familiar? 🧐\n\nYour mission: Observe the photo above and try to "
+                             f"Looks familiar? 🧐\n\nYour mission:\nObserve the photo above and try to "
                              f"get there without using a map 🚫🗺")
     choice_keyboard = [[
-        InlineKeyboardButton("accept", callback_data="place_accept"),
-        InlineKeyboardButton("choose another", callback_data=f"place_another,{lat},{long}"),
+        InlineKeyboardButton("Yalla Let's Go!", callback_data="place_accept"),
+        InlineKeyboardButton("Skip Location", callback_data=f"place_another,{lat},{long}"),
     ]]
 
     context.bot.send_message(
         chat_id=chat_id,
 
-        text="Do you accept the current challenge?! or would you rather have a different one?",
+        text="Ready for the challenge? or would you like to skip this one?",
         reply_markup=InlineKeyboardMarkup(choice_keyboard)
     )
 
