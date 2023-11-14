@@ -77,10 +77,8 @@ def places_choice_button(update, context):
     val = val.split('_')[1]
     if val == "accept":
         context.user_data['point_timer'] = datetime.now()
-        context.user_data['msg'] = context.bot.send_message(chat_id=chat_id, text="Yalla let's go!")
-        query.edit_message_text("Yalla let's go!")
+        context.user_data['msg'] = context.bot.send_message(chat_id=chat_id, text="Yalla let's go! 🤩")
         sh.set_user_state(context.user_data, sh.StateStages.PLAYING_LOOP)
     else:
         fixed = val.split(',')
         decide_on_place(update, context, chat_id, float(fixed[1]), float(fixed[2]))
-

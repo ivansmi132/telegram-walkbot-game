@@ -1,7 +1,6 @@
 import logging
 
-from telegram import Update, InlineKeyboardButton, \
-    InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, error
 from telegram.ext import CallbackContext
 from datetime import datetime, timedelta
 
@@ -133,7 +132,7 @@ def playing_loop(update, context, message):
                 InlineKeyboardButton("Yalla let's go!", callback_data="play_yes"),
                 InlineKeyboardButton("Leave me alone, okay?", callback_data="play_no"),
             ]]
-            points = abs(int(timedelta(minutes=9)*100*context.user_data["walk_amount"]/(context.user_data['point_timer'] - datetime.now() )))
+            points = int(context.user_data["walk_amount"])
             points = points if points <= 100 else 100
             db_handler.score_increment(chat_id, points)
             total_score = db_handler.find_score(chat_id)
@@ -149,25 +148,30 @@ def playing_loop(update, context, message):
             if context.user_data['not_moving_msg'] is None:
                 context.user_data['not_moving_msg'] = context.bot.send_message(chat_id,
                                                                                f"Feeling lost? 🤔\nIt seems like you "
-                                                                               f"haven't moved!\n Are you taking a nap?")
+                                                                               f"haven't moved!\nAre you taking a nap?")
         elif old_location != 0 and current_distance < old_distance:
             if context.user_data['not_moving_msg']:
                 context.bot.delete_message(chat_id=chat_id,
                                            message_id=context.user_data['not_moving_msg'].message_id)
                 context.user_data['not_moving_msg'] = None
-            context.bot.edit_message_text(chat_id=chat_id, text=f"🔥🔥🔥 Getting HOTTER 🔥🔥🔥\n you are {current_distance}"
-                                                                f" meters away from your destination!",
-                                          message_id=context.user_data['msg'].message_id)
-
+            try:
+                context.bot.edit_message_text(chat_id=chat_id, text=f"🔥🔥🔥 Getting HOTTER 🔥🔥🔥\n you are {current_distance}"
+                                                                    f" meters away from your destination!",
+                                            message_id=context.user_data['msg'].message_id)
+            except error.BadRequest:
+                return
 
         elif old_location != 0:
             if context.user_data['not_moving_msg']:
                 context.bot.delete_message(chat_id=chat_id,
                                            message_id=context.user_data['not_moving_msg'].message_id)
                 context.user_data['not_moving_msg'] = None
-            context.bot.edit_message_text(chat_id=chat_id, text=f"🥶🥶🥶 Getting COLDER 🥶🥶🥶\n you are {current_distance}"
-                                                                f" meters away from your destination",
-                                          message_id=context.user_data['msg'].message_id)
+            try:
+                context.bot.edit_message_text(chat_id=chat_id, text=f"🥶🥶🥶 Getting COLDER 🥶🥶🥶\n you are {current_distance}"
+                                                                 f" meters away from your destination",
+                                           message_id=context.user_data['msg'].message_id)
+            except error.BadRequest:
+                return
 
     except KeyError:
         started = False
@@ -275,4 +279,3 @@ def decide_on_place(update, context, chat_id, lat, long):
     except (IndexError, KeyError):
         logger.info(f"For chat #{chat_id} there are no photos of {location_name}")
         return
-
