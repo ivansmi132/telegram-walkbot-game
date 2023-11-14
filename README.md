@@ -25,9 +25,10 @@ the handlers are our personal modules, each handler is in charge of something el
 
     # message_handler is in charge of any user input that isn't a commant, it can be anything from text to location or video
 
+    # state_handler is in charge of the state machine
+
 ## screenshots
 ![screenshot2.jpg](assets%2Fscreenshot2.jpg)
 ![screenshot1.jpg](assets%2Fscreenshot1.png)
 
-[Data Reference](https://github.com/python-telegram-bot/v13.x-wiki/wiki/Storing-bot%2C-user-and-chat-related-data) \
-[Inline Keyboard Reference](https://github.com/python-telegram-bot/v13.x-wiki/wiki/InlineKeyboard-Example)
+
