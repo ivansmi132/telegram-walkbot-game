@@ -24,6 +24,7 @@ def start(update: Update, context: CallbackContext):
     sh.set_user_state(context.user_data, sh.StateStages.ASKING_DISTANCE)
     chat_id = update.effective_chat.id
     user_name = update.message.chat.first_name
+    db_handler.create_user(chat_id, user_name)
     logger.info(f"> Start chat #{chat_id}, with: {user_name!r}")
     play(update, context)
 

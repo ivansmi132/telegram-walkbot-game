@@ -130,15 +130,15 @@ def playing_loop(update, context, message):
         if current_distance <= 20:
             play_again_keyboard = [[
                 InlineKeyboardButton("Yalla let's go!", callback_data="play_yes"),
-                InlineKeyboardButton("Leave me alone, okay?", callback_data="play_no"),
+                InlineKeyboardButton("Leave me alone!", callback_data="play_no"),
             ]]
             points = int(context.user_data["walk_amount"])
             points = points if points <= 100 else 100
-            db_handler.score_increment(chat_id, points)
-            total_score = db_handler.find_score(chat_id)
+            #db_handler.score_increment(chat_id, points)
+            #total_score = db_handler.find_score(chat_id)
 
             context.bot.send_message(chat_id, f"🏆🏆🏆 Congratulations! 🏆🏆🏆\n"
-                                              f"You got {points} point. for a total score of {total_score}\n"
+                                              #f"You got {points} point. for a total score of {total_score}\n"
                                               f"You have arrived at your destination!\n")
             sh.set_user_state(context.user_data, sh.StateStages.WIN_SCREEN)
 
