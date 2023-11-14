@@ -57,30 +57,33 @@ my_counter = counter_generator()
 
 
 def get_location(lat=None, long=None, filter=None, data=None):
-    global my_counter
-    # defined here only for now.
-    filter = "Burgers"
+    try:
+        global my_counter
+        # defined here only for now.
+        filter = "Burgers"
 
-    # Funny enough, defining the location_bias like this, actually made it track my computer's location
-    # It seems like google fetches your location if lat and long are NONE, but need further testing
-    location_bias = f"point:{lat},{long}"
+        # Funny enough, defining the location_bias like this, actually made it track my computer's location
+        # It seems like google fetches your location if lat and long are NONE, but need further testing
+        location_bias = f"point:{lat},{long}"
 
-    # Logging
-    logger.info(f"Getting location: {location_bias} | with fiter: {filter}")
+        # Logging
+        logger.info(f"Getting location: {location_bias} | with fiter: {filter}")
 
-    g_client = googlemaps.Client(key=GOOGLE_API_KEY)
-    #response = find_place(g_client, filter, "textquery", location_bias=location_bias)
-    response = places_nearby(g_client, (lat, long), radius=700)
-    #pprint(response['results'])
-    counter = next(my_counter)
-    print(counter)
-    print(len(response['results']))
-    if len(response['results']) != 0:
-        modulated_counter = counter % len(response['results'])
-    else:
-        modulated_counter = 0
-    place = get_place_details(g_client, response['results'][modulated_counter]['place_id'])  # [counter][place_id]
-    return place
+        g_client = googlemaps.Client(key=GOOGLE_API_KEY)
+        #response = find_place(g_client, filter, "textquery", location_bias=location_bias)
+        response = places_nearby(g_client, (lat, long), radius=700)
+        #pprint(response['results'])
+        counter = next(my_counter)
+        print(counter)
+        print(len(response['results']))
+        if len(response['results']) != 0:
+            modulated_counter = counter % len(response['results'])
+        else:
+            modulated_counter = 0
+        place = get_place_details(g_client, response['results'][modulated_counter]['place_id'])  # [counter][place_id]
+        return place
+    except IndexError:
+        return get_location(lat, long)
 
 
 def get_photo(photo_reference):
