@@ -13,6 +13,7 @@ This is a telegram game bot where the players tell the bot how far they want to 
 the api folder contains all the APIs that we use besides our main telegram one
 
     # google_maps uses the googlemaps api to fetch location data based on latitude and longitude
+    # MongoDB Atlas for the score and leaderboards
 
 ## handlers
 the handlers are our personal modules, each handler is in charge of something else
